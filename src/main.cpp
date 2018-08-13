@@ -1,3 +1,4 @@
+#include "json.hpp"
 #include <math.h>
 #include <uWS/uWS.h>
 #include <chrono>
@@ -7,7 +8,6 @@
 #include "Eigen-3.3/Eigen/Core"
 #include "Eigen-3.3/Eigen/QR"
 #include "MPC.h"
-#include "json.hpp"
 
 // for convenience
 using json = nlohmann::json;
@@ -101,10 +101,27 @@ int main() {
           double steer_value;
           double throttle_value;
 
+          Eigen::VectorXd sx(ptsx.size());
+          Eigen::VectorXd sy(ptsy.size());
+          for (int i = 0; i < ptsx.size(); i++) {
+            sx[i] = ptsx[i];
+            sy[i] = ptsy[i];
+          }
+
+          auto coeffs = polyfit(sx, sy, 3);
+          double cte = polyeval(coeffs, px) - py;
+          double epsi = psi - atan(3 * pow(coeffs[3], 2) + 2 * coeffs[2] + coeffs[1]);
+          Eigen::VectorXd state(6);
+          state << px, py, psi, v, cte, epsi;
+          auto vars = mpc.Solve(state, coeffs);
+
+          steer_value = vars[6];
+          throttle_value = vars[7];
+
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
-          msgJson["steering_angle"] = steer_value;
+          msgJson["steering_angle"] = steer_value / deg2rad(25);
           msgJson["throttle"] = throttle_value;
 
           //Display the MPC predicted trajectory 
