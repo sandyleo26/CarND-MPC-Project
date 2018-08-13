@@ -114,14 +114,7 @@ int main() {
           double steer_value;
           double throttle_value;
 
-          Eigen::VectorXd sx(ptsx.size());
-          Eigen::VectorXd sy(ptsy.size());
-          for (int i = 0; i < ptsx.size(); i++) {
-            sx[i] = ptsx[i];
-            sy[i] = ptsy[i];
-          }
-
-          auto coeffs = polyfit(sx, sy, 3);
+          auto coeffs = polyfit(ptsx_transformed, ptsy_transformed, 3);
           double cte = polyeval(coeffs, 0);
           double epsi = -atan(coeffs[1]);
           Eigen::VectorXd state(6);
