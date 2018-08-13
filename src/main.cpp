@@ -92,6 +92,19 @@ int main() {
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
 
+          for (int i = 0; i < ptsx.size(); i++) {
+            double shift_x = ptsx[i] - px;
+            double shift_y = ptsy[i] - py;
+
+            ptsx[i] = (shift_x * cos(0 - psi) - shift_y * sin(0 - psi));
+            ptsy[i] = (shift_x * sin(0 - psi) + shift_y * cos(0 - psi));
+          }
+
+          double *ptrx = &ptsx[0];
+          Eigen::Map<Eigen::VectorXd> ptsx_transformed(ptrx, 6);
+          double *ptry = &ptsy[0];
+          Eigen::Map<Eigen::VectorXd> ptsy_transformed(ptry, 6);
+
           /*
           * TODO: Calculate steering angle and throttle using MPC.
           *
@@ -109,10 +122,10 @@ int main() {
           }
 
           auto coeffs = polyfit(sx, sy, 3);
-          double cte = polyeval(coeffs, px) - py;
-          double epsi = psi - atan(3 * pow(coeffs[3], 2) + 2 * coeffs[2] + coeffs[1]);
+          double cte = polyeval(coeffs, 0);
+          double epsi = -atan(coeffs[1]);
           Eigen::VectorXd state(6);
-          state << px, py, psi, v, cte, epsi;
+          state << 0, 0, 0, v, cte, epsi;
           auto vars = mpc.Solve(state, coeffs);
 
           steer_value = vars[6];
@@ -137,6 +150,9 @@ int main() {
           //Display the waypoints/reference line
           vector<double> next_x_vals;
           vector<double> next_y_vals;
+
+          next_x_vals = ptsx;
+          next_y_vals = ptsy;
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Yellow line
