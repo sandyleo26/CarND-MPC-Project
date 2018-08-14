@@ -35,14 +35,18 @@ ref_v = 40
 ```
 And the car could finish the lap easily with an average speed of 37mph. Then I want to run faster by increasing the speed to 80mph then the car will run off track. Even I set `ref_v` to 50 it still couldn't finish one lap.
 
-Then I change `dt` to `0.05` and keep `ref_v = 50` and it can finish. I then increase `ref_v` to 100. It can still finish safely, the average speed however isn't increased (~51mph). I also tried using the same weight (500) for speed matching cost as `cte` and `epsi` but still no change. I suspect that it's because:
-1. The solver is stuck at some local optima that increasing speed is not getting cost down
-2. My laptop is not powerful so that the solver doesn't have the time before timing out to find the best solution
+I fix `dt`, `N` and adjust the weights to different cost items as well as reference velocity `ref_v` to achieve higher speed. Here's what I find out.
 
-Anyway, this is something that I will continue to find out in the future
+1. Initially, I use large weights for `cte` and `epsi` (3000) and medium weights for actuators and actuator gap (100) and small weights for velocity (1). The car can run safely at a speed of 30
+2. When I increase the reference speed to 50 however, the car will run off track. I notice the car is unstable before and after a turn so I lower the `cte` and `epsi` weights (1000) and increase gap weights (300000 and 3000). After I set the `ref_v` to 100, the car can run safely around 50mph.
+3. I lower the `cte` and `epsi` weights even more to 500 and increase the velocity weight to 10 and set `ref_v` to 70. The car can run safely at 60.
+
+![image1](./image1.jpg)
+
+I will do more experiments in the future to increase the speed even more.
 
 ## If the student preprocesses waypoints, the vehicle state, and/or actuators prior to the MPC procedure it is described
 Before fitting the polynomial, the x and y coordinates sent by the simulator are transformed to vehicle's coordinate system
 
 ## The student implements Model Predictive Control that handles a 100 millisecond latency. Student provides details on how they deal with latency.
-I don't find much difference running with or without delay. Perhaps it is because the speed is never higher than 60mph.
+The 100ms latency is considered. Basically, I use the model to predict the car movement during the latency period and then pass the state then to the solver. This will result the actuator more in sync with the car's real time state.
