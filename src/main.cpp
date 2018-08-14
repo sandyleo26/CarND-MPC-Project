@@ -91,6 +91,9 @@ int main() {
           double py = j[1]["y"];
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
+          double delta = j[1]["steering_angle"];
+          double a = j[1]["throttle"];
+          double Lf = 2.67;
 
           for (int i = 0; i < ptsx.size(); i++) {
             double shift_x = ptsx[i] - px;
@@ -118,7 +121,17 @@ int main() {
           double cte = polyeval(coeffs, 0);
           double epsi = -atan(coeffs[1]);
           Eigen::VectorXd state(6);
-          state << 0, 0, 0, v, cte, epsi;
+          // state << 0, 0, 0, v, cte, epsi;
+
+          double latency_dt = 0.1;
+          double px_delay = v * cos(psi) * latency_dt;
+          double py_delay = v * sin(psi) * latency_dt;
+          double psi_delay = -v * delta / Lf * latency_dt;
+          double v_delay = v + a * latency_dt;
+          double cte_delay = cte + v * sin(epsi) * latency_dt;
+          double epsi_delay = epsi - v * delta / Lf * latency_dt;
+          state << px_delay, py_delay, psi_delay, v_delay, cte_delay, epsi_delay;
+
           auto vars = mpc.Solve(state, coeffs);
 
           steer_value = vars[0];
@@ -127,7 +140,6 @@ int main() {
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
-          double Lf = 2.67;
           msgJson["steering_angle"] = steer_value / (deg2rad(25) * Lf);
           msgJson["throttle"] = throttle_value;
 
