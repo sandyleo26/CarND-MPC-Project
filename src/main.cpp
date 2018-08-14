@@ -155,8 +155,8 @@ int main() {
           //Display the waypoints/reference line
           vector<double> next_x_vals;
           vector<double> next_y_vals;
-          int num_points = 25;
-          double poly_inc = 2.5;
+          int num_points = 20;
+          double poly_inc = 2;
           for (int i = 1; i < num_points; i++) {
             next_x_vals.push_back(poly_inc * i);
             next_y_vals.push_back(polyeval(coeffs, poly_inc * i));
