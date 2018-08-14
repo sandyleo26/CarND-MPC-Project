@@ -117,21 +117,29 @@ int main() {
           double steer_value;
           double throttle_value;
 
+          // initial state after transform
           auto coeffs = polyfit(ptsx_transformed, ptsy_transformed, 3);
+          px = 0;
+          py = 0;
+          psi = 0;
+          v = v;
           double cte = polyeval(coeffs, 0);
           double epsi = -atan(coeffs[1]);
-          Eigen::VectorXd state(6);
-          // state << 0, 0, 0, v, cte, epsi;
 
-          double latency_dt = 0.1;
-          double px_delay = v * cos(psi) * latency_dt;
-          double py_delay = v * sin(psi) * latency_dt;
-          double psi_delay = -v * delta / Lf * latency_dt;
-          double v_delay = v + a * latency_dt;
-          double cte_delay = cte + v * sin(epsi) * latency_dt;
-          double epsi_delay = epsi - v * delta / Lf * latency_dt;
+          // latency is 100ms or 0.1 sec
+          const double latency = 0.1;
+          // Initial state vector with delay
+          double px_delay   = px    + v * cos( psi ) * latency;
+          double py_delay   = py    + v * sin( psi ) * latency;
+          double psi_delay  = psi   - v * delta * latency / Lf;
+          double v_delay    = v     + a * latency;
+          double cte_delay  = cte  + v * sin( epsi ) * latency;
+          double epsi_delay = epsi - v * delta * latency / Lf;
+
+          Eigen::VectorXd state(6);
           state << px_delay, py_delay, psi_delay, v_delay, cte_delay, epsi_delay;
 
+          // TODO: call MPC Solve() to get the steering angle and throttle position
           auto vars = mpc.Solve(state, coeffs);
 
           steer_value = vars[0];
